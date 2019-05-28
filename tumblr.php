@@ -10,6 +10,7 @@ function usage($name)
 	echo "\t-p, --password (required)\n\t\ttumblr password\n\n";
 	echo "\t-b, --blog (required)\n\t\ttumblr blog without .tumblr.com (required)\n\n";
 	echo "\t-c, --conversation (optional|required)\n\t\tconversation id from the list\n\n";
+	echo "\t-r, --rate-limit [requests] (optional [optional=1000])\n\t\tset rate limit (requests per minute)";
 	echo "\t-d, --date YYYYMMDD (optional)\n\t\toutput only log for specified date\n\n";
 	echo "\t-f, --file filename (optional)\n\t\toutput file name\n\n";
 	echo "\t-s, --split (optional) (require -f)\n\t\tput output in separete files for each day: filename-YYYYMMDD.ext\n\n";
@@ -22,6 +23,7 @@ $username = "";
 $password = "";
 $blog = "";
 $conversation = "";
+$rate = 0;
 $file = "";
 $split = 0;
 $date = "";
@@ -40,6 +42,12 @@ if (!isset($a['b']) && !isset($a['blog'])) usage($argv[0]); else {
 }
 if (isset($a['c'])) $conversation = $a['c'];
 if (isset($a['conversation'])) $conversation = $a['conversation'];
+if (isset($a['r'])) {
+    if ((int)$a['r'] > 0) $rate = (int)$a['r']; else $rate = 1000;
+}
+if (isset($a['rate-limit'])) {
+    if ((int)$a['rate-limit'] > 0) $rate = (int)$a['rate-limit']; else $rate = 1000;
+}
 if (isset($a['f'])) $file = $a['f'];
 if (isset($a['file'])) $file = $a['file'];
 if (isset($a['s'])) $split = 1;
@@ -198,6 +206,11 @@ while ($next != "")
 	}
 	
 	$q = "https://www.tumblr.com" . $next;
+
+	if ($rate > 0)
+	{
+	    usleep((60 / $rate) * 1000000);
+	}
 }
 
 curl_close($ch);
