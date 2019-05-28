@@ -10,7 +10,7 @@ function usage($name)
 	echo "\t-p, --password (required)\n\t\ttumblr password\n\n";
 	echo "\t-b, --blog (required)\n\t\ttumblr blog without .tumblr.com (required)\n\n";
 	echo "\t-c, --conversation (optional|required)\n\t\tconversation id from the list\n\n";
-	echo "\t-r, --rate-limit [requests] (optional [optional=1000])\n\t\tset rate limit (requests per minute)";
+	echo "\t-r, --rate-limit [requests] (optional [optional=1000])\n\t\tset rate limit per minute - default 1000 if no value specified\n\n";
 	echo "\t-d, --date YYYYMMDD (optional)\n\t\toutput only log for specified date\n\n";
 	echo "\t-f, --file filename (optional)\n\t\toutput file name\n\n";
 	echo "\t-s, --split (optional) (require -f)\n\t\tput output in separete files for each day: filename-YYYYMMDD.ext\n\n";
