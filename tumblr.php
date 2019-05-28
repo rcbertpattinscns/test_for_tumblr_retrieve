@@ -3,7 +3,7 @@
 
 function usage($name)
 {
-	echo "\nUsage: " . $name . " -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD]\n\n";
+	echo "\nUsage: " . $name . " -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]\n\n";
 	echo "\tFirst run script only with username, password and blog to get list of conversations.\n";
 	echo "\tThen run script again specifying conversation you want to download.\n\n";
 	echo "\t-u, --username (required)\n\t\ttumblr username or E-mail\n\n";
@@ -27,7 +27,7 @@ $rate = 0;
 $file = "";
 $split = 0;
 $date = "";
-$a = getopt("u:p:b:c:f:sd:", array("username:", "password:", "blog:", "conversation:", "file:", "split", "date:"));
+$a = getopt("u:p:b:c:f:sdr:", array("username:", "password:", "blog:", "conversation:", "file:", "split", "date:", "rate:"));
 if (!isset($a['u']) && !isset($a['username'])) usage($argv[0]); else {
 	if (isset($a['u'])) $username = $a['u'];
 	if (isset($a['username'])) $username = $a['username'];
@@ -43,10 +43,10 @@ if (!isset($a['b']) && !isset($a['blog'])) usage($argv[0]); else {
 if (isset($a['c'])) $conversation = $a['c'];
 if (isset($a['conversation'])) $conversation = $a['conversation'];
 if (isset($a['r'])) {
-    if ((int)$a['r'] > 0) $rate = (int)$a['r']; else $rate = 1000;
+	if ((int)$a['r'] > 0) $rate = (int)$a['r']; else $rate = 1000;
 }
 if (isset($a['rate-limit'])) {
-    if ((int)$a['rate-limit'] > 0) $rate = (int)$a['rate-limit']; else $rate = 1000;
+	if ((int)$a['rate-limit'] > 0) $rate = (int)$a['rate-limit']; else $rate = 1000;
 }
 if (isset($a['f'])) $file = $a['f'];
 if (isset($a['file'])) $file = $a['file'];
@@ -209,7 +209,7 @@ while ($next != "")
 
 	if ($rate > 0)
 	{
-	    usleep((60 / $rate) * 1000000);
+		usleep((60 / $rate) * 1000000);
 	}
 }
 
