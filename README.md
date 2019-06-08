@@ -2,7 +2,8 @@
 
 A script to download tumblr chat messages
 ```
-Usage: ./tumblr.php -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]
+Usage:
+./tumblr.php [--skip-cert-verify] -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]
 ```
 First, run the script just with your Tumblr username, password and the URL for the specific blog **without** the ".tumblr.com" portion. (The blog must be associated with your Tumblr account.)
 
