@@ -25,6 +25,8 @@ If you want the messages to be saved to a file, use a file name, as shown below:
 ```
 Usage: ./tumblr.php -u username -p password -b blog 111111111 -f file.txt
 ```
+On some installs local cert authority is not up to date and if you receive empty page, you can try to skip SSL verification with --skip-cert-verify option. Keep in mind that this is INSECURE.
+
 if **-r** option is supplied then script will wait some time to meet rate limit requests per minute (default 1000 if not specified)
 
 If **-s** option is supplied log file will be splited in multiple files (one for each day) and date will be added to file name (file-YYMMDD.txt).
@@ -37,7 +39,7 @@ This script has not yet been tested very well, so it may have bugs, or not work 
 
 Full help message (displayed if no or invlid options are supplied):
 ````
-Usage: ./tumblr.php -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD]
+Usage: ./tumblr.php [--skip-cert-verify] -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD]
 
 	First run script only with username, password and blog to get list of conversations.
 	Then run script again specifying conversation you want to download.
@@ -47,6 +49,9 @@ Usage: ./tumblr.php -u username -p password -b blog [-c conversation] [-f filena
 
 	-p, --password (required)
 		tumblr password
+
+	--skip-cert-verify
+		skip SSL verification - INSECURE!
 
 	-b, --blog (required)
 		tumblr blog without .tumblr.com (required)

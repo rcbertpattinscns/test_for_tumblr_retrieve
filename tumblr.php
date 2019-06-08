@@ -3,11 +3,12 @@
 
 function usage($name)
 {
-	echo "\nUsage: " . $name . " -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]\n\n";
+	echo "\nUsage: " . $name . " [--skip-cert-verify] -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]\n\n";
 	echo "\tFirst run script only with username, password and blog to get list of conversations.\n";
 	echo "\tThen run script again specifying conversation you want to download.\n\n";
 	echo "\t-u, --username (required)\n\t\ttumblr username or E-mail\n\n";
 	echo "\t-p, --password (required)\n\t\ttumblr password\n\n";
+	echo "\t--skip-cert-verify\n\t\tskip SSL verification - INSECURE!\n\n";
 	echo "\t-b, --blog (required)\n\t\ttumblr blog without .tumblr.com (required)\n\n";
 	echo "\t-c, --conversation (optional|required)\n\t\tconversation id from the list\n\n";
 	echo "\t-r, --rate-limit [requests] (optional [optional=1000])\n\t\tset rate limit per minute - default 1000 if no value specified\n\n";
@@ -21,13 +22,15 @@ function usage($name)
 
 $username = "";
 $password = "";
+$skip_ssl = 0;
 $blog = "";
 $conversation = "";
 $rate = 0;
 $file = "";
 $split = 0;
 $date = "";
-$a = getopt("u:p:b:c:f:sdr:", array("username:", "password:", "blog:", "conversation:", "file:", "split", "date:", "rate:"));
+$a = getopt("u:p:b:c:f:sdr:", array("username::", "password::", "blog::", "conversation:", "file:", "split", "date:", "rate:", "skip-cert-verify"));
+print_r($a);
 if (!isset($a['u']) && !isset($a['username'])) usage($argv[0]); else {
 	if (isset($a['u'])) $username = $a['u'];
 	if (isset($a['username'])) $username = $a['username'];
@@ -35,6 +38,9 @@ if (!isset($a['u']) && !isset($a['username'])) usage($argv[0]); else {
 if (!isset($a['p']) && !isset($a['password'])) usage($argv[0]); else {
 	if (isset($a['p'])) $password = $a['p'];
 	if (isset($a['password'])) $password = $a['password'];
+}
+if (isset($a['skip-cert-verify'])) {
+	$skip_ssl = 1;
 }
 if (!isset($a['b']) && !isset($a['blog'])) usage($argv[0]); else {
 	if (isset($a['b'])) $blog = $a['b'] . ".tumblr.com";
@@ -67,6 +73,10 @@ curl_setopt($ch, CURLOPT_COOKIESESSION, true);
 curl_setopt($ch, CURLOPT_COOKIEFILE, "tumbltcookiefile");
 curl_setopt($ch, CURLOPT_POST, false);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+if ($skip_ssl) {
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+}
 $r = curl_exec($ch);
 
 preg_match('#<meta name="tumblr-form-key" id="tumblr_form_key" content="(.*?)">#', $r,$matches);
@@ -115,7 +125,8 @@ if ($conversation == "")
 		curl_setopt($ch, CURLOPT_POST, false);
 		$r = curl_exec($ch);
 		$r = json_decode($r);
-		$next = @$r->response->conversations->_links->next->href;
+
+		$next = @$r->response->_links->next->href;
 
 		foreach ($r->response->conversations as $c)
 		{
@@ -124,7 +135,7 @@ if ($conversation == "")
 				$conv[$c->id][] = $p->name;
 			}
 		}
-		
+
 		$q = "https://www.tumblr.com" . $next;
 	}
 
