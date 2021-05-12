@@ -3,7 +3,7 @@
 A script to download tumblr chat messages
 ```
 Usage:
-./tumblr.php [--skip-cert-verify] -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]
+./tumblr.php [--skip-cert-verify] -u username -p password -b blog [-i partner] [-c conversation] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]
 ```
 There two ways to fetch conversations:
 
@@ -60,6 +60,9 @@ Usage: ./tumblr.php [--skip-cert-verify] -u username -p password -b blog [-c con
 
 	-b, --blog (required)
 		tumblr blog without .tumblr.com (required)
+
+	-i, --partner (optional)
+		Instead of using conversation id this is a new way to fetch conversation by specifying partner username
 
 	-c, --conversation (optional|required)
 		conversation id from the list
