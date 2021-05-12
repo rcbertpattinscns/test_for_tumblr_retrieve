@@ -289,7 +289,10 @@ while ($next != "")
 			} else
 			if ($i->type == "POSTREF")
 			{
-				$messages[$i->ts] = date("d/m/Y, H:i:s", $i->ts / 1000) . " " . $user . ": " . $i->post->post_url;
+				if ($i->post->post_url == "")
+				    $messages[$i->ts] = date("d/m/Y, H:i:s", $i->ts / 1000) . " " . $user . ": sent a post that's no longer available.";
+				else
+				    $messages[$i->ts] = date("d/m/Y, H:i:s", $i->ts / 1000) . " " . $user . ": " . $i->post->post_url;
 			} else {
 				echo "\nUNKNOWN\n";
 				print_r($i);
