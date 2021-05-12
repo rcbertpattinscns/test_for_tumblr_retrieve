@@ -44,38 +44,43 @@ This script has not yet been tested very well, so it may have bugs, or not work 
 
 Full help message (displayed if no or invlid options are supplied):
 ````
-Usage: ./tumblr.php [--skip-cert-verify] -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD]
+Usage: ./tumblr.php [--skip-cert-verify] -u username -p password -b blog [-i partner] [-c conversation_id] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]
 
-	First run script only with username, password and blog to get list of conversations.
-	Then run script again specifying conversation you want to download.
+    There two ways to fetch conversations:
 
-	-u, --username (required)
-		tumblr username or E-mail
+    New easy way is to specify username, password, block and partner by username
 
-	-p, --password (required)
-		tumblr password
+    Old way is to run script first only with username, password and blog to get list of conversations.
+    Then run script again specifying conversation you want to download.
 
-	--skip-cert-verify
-		skip SSL verification - INSECURE!
+    -u, --username (required)
+	tumblr username or E-mail
 
-	-b, --blog (required)
-		tumblr blog without .tumblr.com (required)
+    -p, --password (required)
+	tumblr password
 
-	-i, --partner (optional)
-		Instead of using conversation id this is a new way to fetch conversation by specifying partner username
+    --skip-cert-verify
+	skip SSL verification - INSECURE!
 
-	-c, --conversation (optional|required)
-		conversation id from the list
+    -b, --blog (required)
+	tumblr blog without .tumblr.com (required)
 
-	-r, --rate-limit [requests] (optional [optional=1000])
-		set rate limit - default 1000 if no value specified
+    -i, --partner (optional)
+	Instead of using conversation id this is a new way
+	to fetch conversation by specifying partner username
 
-	-d, --date YYYYMMDD (optional)
-		output only log for specified date
+    -c, --conversation_id (optional|required)
+	conversation id from the list
 
-	-f, --file filename (optional)
-		output file name
+    -r, --rate-limit [requests] (optional [optional=1000])
+	set rate limit per minute - default 1000 if no value specified
 
-	-s, --split (optional) (require -f)
-		put output in separete files for each day: filename-YYYYMMDD.ext
+    -d, --date YYYYMMDD (optional)
+	output only log for specified date
+
+    -f, --file filename (optional)
+	output file name
+
+    -s, --split (optional) (require -f)
+	put output in separete files for each day: filename-YYYYMMDD.ext
 ````
