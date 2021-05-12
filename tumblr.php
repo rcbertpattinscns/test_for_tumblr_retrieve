@@ -5,14 +5,17 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
 function usage($name)
 {
-	echo "\nUsage: " . $name . " [--skip-cert-verify] -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]\n\n";
-	echo "\tFirst run script only with username, password and blog to get list of conversations.\n";
+	echo "\nUsage: " . $name . " [--skip-cert-verify] -u username -p password -b blog [-i partner] [-c conversation_id] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]\n\n";
+	echo "\tThere two ways to fetch conversations:\n\n";
+	echo "\tNew easy way is to specify username, password, blog and partner by username\n\n";
+	echo "\tOld way is to run script first only with username, password and blog to get list of conversations.\n";
 	echo "\tThen run script again specifying conversation you want to download.\n\n";
 	echo "\t-u, --username (required)\n\t\ttumblr username or E-mail\n\n";
 	echo "\t-p, --password (required)\n\t\ttumblr password\n\n";
 	echo "\t--skip-cert-verify\n\t\tskip SSL verification - INSECURE!\n\n";
 	echo "\t-b, --blog (required)\n\t\ttumblr blog without .tumblr.com (required)\n\n";
-	echo "\t-c, --conversation (optional|required)\n\t\tconversation id from the list\n\n";
+	echo "\t-i, --partner (optional)\n\t\tInstead of using conversation id this is a new way\n\t\tto fetch conversation by specifying partner username\n\n";
+	echo "\t-c, --conversation_id (optional|required)\n\t\tconversation id from the list\n\n";
 	echo "\t-r, --rate-limit [requests] (optional [optional=1000])\n\t\tset rate limit per minute - default 1000 if no value specified\n\n";
 	echo "\t-d, --date YYYYMMDD (optional)\n\t\toutput only log for specified date\n\n";
 	echo "\t-f, --file filename (optional)\n\t\toutput file name\n\n";
@@ -27,11 +30,12 @@ $password = "";
 $skip_ssl = 0;
 $blog = "";
 $conversation = "";
+$partner = "";
 $rate = 0;
 $file = "";
 $split = 0;
 $date = "";
-$a = getopt("u:p:b:c:f:sdr:", array("username::", "password::", "blog::", "conversation:", "file:", "split", "date:", "rate:", "skip-cert-verify"));
+$a = getopt("u:p:b:i:c:f:d:r:s", array("username:", "password:", "blog:", "partner:", "conversation:", "file:", "split", "date:", "rate:", "skip-cert-verify"));
 
 if (!isset($a['u']) && !isset($a['username'])) usage($argv[0]); else {
 	if (isset($a['u'])) $username = $a['u'];
@@ -50,6 +54,8 @@ if (!isset($a['b']) && !isset($a['blog'])) usage($argv[0]); else {
 }
 if (isset($a['c'])) $conversation = $a['c'];
 if (isset($a['conversation'])) $conversation = $a['conversation'];
+if (isset($a['i'])) $partner = $a['i'];
+if (isset($a['partner'])) $partner = $a['partner'];
 if (isset($a['r'])) {
 	if ((int)$a['r'] > 0) $rate = (int)$a['r']; else $rate = 1000;
 }
@@ -116,7 +122,7 @@ $post = array(
     "username"		=> $username,
 );
 
-echo "send password: ";
+echo "send password, ";
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, "https://www.tumblr.com/api/v2/oauth2/token");
 curl_setopt($ch, CURLOPT_HEADER, false);
@@ -139,10 +145,9 @@ $r = curl_exec($ch);
 $r = @(array)json_decode($r);
 if ($r['error'] != "")
 {
-    echo $r['error_description'] . "\n";
+    echo "\nError: " . $r['error_description'] . "\n";
     exit;
 }
-echo "OK\n";
 
 /*echo "\nFetch: login, ";
 $ch = curl_init();
@@ -190,36 +195,52 @@ if (($token == "") || ($mention == ""))
 	exit;
 }*/
 
-if ($conversation == "")
+echo "conversations, ";
+
+$conv = array();
+$next = "xxx";
+$q = "https://www.tumblr.com/svc/conversations?participant=" . $blog . "&_=" . time() . "000";
+while ($next != "")
 {
-	echo "conversations, ";
-
-	$conv = array();
-	$next = "xxx";
-	$q = "https://www.tumblr.com/svc/conversations?participant=" . $blog . "&_=" . time() . "000";
-	while ($next != "")
+	curl_setopt($ch, CURLOPT_URL, $q);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+		'X-Requested-With: XMLHttpRequest',
+	));
+	curl_setopt($ch, CURLOPT_POST, false);
+	$r = curl_exec($ch);
+	$r = json_decode($r);
+	$next = @$r->response->_links->next->href;
+	foreach ($r->response->conversations as $c)
 	{
-		curl_setopt($ch, CURLOPT_URL, $q);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-			'X-Requested-With: XMLHttpRequest',
-		));
-		curl_setopt($ch, CURLOPT_POST, false);
-		$r = curl_exec($ch);
-		$r = json_decode($r);
-
-		$next = @$r->response->_links->next->href;
-
-		foreach ($r->response->conversations as $c)
+		foreach ($c->participants as $p)
 		{
-			foreach ($c->participants as $p)
+			if (($conversation == "") && ($partner != ""))
+			{
+				if ($p->name == $partner)
+				{
+					$conversation = $c->id;
+					break 3;
+				}
+			} else
+			if (($conversation != "") && ($partner == ""))
+			{
+			if ($c->id == $conversation)
+				{
+					break 3;
+				}
+			} else
+			if (($conversation == "") && ($partner == ""))
 			{
 				$conv[$c->id][] = $p->name;
 			}
 		}
-
-		$q = "https://www.tumblr.com" . $next;
 	}
 
+	$q = "https://www.tumblr.com" . $next;
+}
+
+if ($conversation == "")
+{
 	echo "done.\n\n";
 
 	echo "\nConversations: \n";
