@@ -1,6 +1,8 @@
 #!/usr/bin/php
 <?php
 
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
+
 function usage($name)
 {
 	echo "\nUsage: " . $name . " [--skip-cert-verify] -u username -p password -b blog [-c conversation] [-f filename] [-s] [-d YYYYMMDD] [-r [req/sec]]\n\n";
@@ -30,7 +32,7 @@ $file = "";
 $split = 0;
 $date = "";
 $a = getopt("u:p:b:c:f:sdr:", array("username::", "password::", "blog::", "conversation:", "file:", "split", "date:", "rate:", "skip-cert-verify"));
-print_r($a);
+
 if (!isset($a['u']) && !isset($a['username'])) usage($argv[0]); else {
 	if (isset($a['u'])) $username = $a['u'];
 	if (isset($a['username'])) $username = $a['username'];
@@ -63,7 +65,86 @@ if (isset($a['date'])) $date = $a['date'];
 if (isset($a['d']) || isset($a['date']))
 	if (strlen($date) != 8) usage($agrv[0]);
 
-echo "\nFetch: login, ";
+$post = array(
+    "authentication"	=> "oauth2_cookie",
+    "email"		=> $username,
+);
+
+// land to main page
+echo "Get main page to fetch auth token, ";
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "https://www.tumblr.com/login");
+curl_setopt($ch, CURLOPT_HEADER, false);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_COOKIESESSION, true);
+curl_setopt($ch, CURLOPT_COOKIEFILE, "tumbltcookiefile");
+curl_setopt($ch, CURLOPT_POST, false);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+if ($skip_ssl) {
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+}
+$r = curl_exec($ch);
+
+preg_match('#"API_TOKEN":"(.*?)"#', $r, $matches);
+$auth_token = $matches[1];
+
+echo "send username, ";
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "https://www.tumblr.com/api/v2/login/mode");
+curl_setopt($ch, CURLOPT_HEADER, false);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_COOKIESESSION, true);
+curl_setopt($ch, CURLOPT_COOKIEFILE, "tumbltcookiefile");
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+    "Authorization: Bearer " . $auth_token
+));
+if ($skip_ssl) {
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+}
+$r = curl_exec($ch);
+
+$post = array(
+    "grant_type"	=> "password",
+    "password"		=> $password,
+    "username"		=> $username,
+);
+
+echo "send password: ";
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "https://www.tumblr.com/api/v2/oauth2/token");
+curl_setopt($ch, CURLOPT_HEADER, false);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_COOKIESESSION, true);
+curl_setopt($ch, CURLOPT_COOKIEFILE, "tumbltcookiefile");
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+    "Authorization: Bearer " . $auth_token
+));
+if ($skip_ssl) {
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+}
+$r = curl_exec($ch);
+
+$r = @(array)json_decode($r);
+if ($r['error'] != "")
+{
+    echo $r['error_description'] . "\n";
+    exit;
+}
+echo "OK\n";
+
+/*echo "\nFetch: login, ";
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, "https://www.tumblr.com/login");
 curl_setopt($ch, CURLOPT_HEADER, false);
@@ -107,7 +188,7 @@ if (($token == "") || ($mention == ""))
 	echo "done.\n\nInvlid username or password!\n\n";
 
 	exit;
-}
+}*/
 
 if ($conversation == "")
 {
