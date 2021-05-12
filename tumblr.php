@@ -197,6 +197,7 @@ if (($token == "") || ($mention == ""))
 
 echo "conversations, ";
 
+$uuid = array();
 $conv = array();
 $next = "xxx";
 $q = "https://www.tumblr.com/svc/conversations?participant=" . $blog . "&_=" . time() . "000";
@@ -214,18 +215,25 @@ while ($next != "")
 	{
 		foreach ($c->participants as $p)
 		{
+			if ($p->name . ".tumblr.com" == $blog)
+			{
+				$uuid[$p->uuid] = $p->name;
+			}
+
 			if (($conversation == "") && ($partner != ""))
 			{
 				if ($p->name == $partner)
 				{
 					$conversation = $c->id;
+					$uuid[$p->uuid] = $p->name;
 					break 3;
 				}
 			} else
 			if (($conversation != "") && ($partner == ""))
 			{
-			if ($c->id == $conversation)
+				if ($c->id == $conversation)
 				{
+					$uuid[$p->uuid] = $p->name;
 					break 3;
 				}
 			} else
@@ -295,7 +303,8 @@ while ($next != "")
 
 		if (($d == "") || ($d == $date))
 		{
-			$user = @array_shift(explode(".", $i->participant));
+			//$user = @array_shift(explode(".", $i->participant));
+			$user = $uuid[$i->participant];
 
 			if ($i->type == "TEXT")
 			{
